@@ -3,53 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="tab-title">浴室 - Routine 07:00</title>
+  <title id="tab-title">浴室</title>
+  <!-- 引入像素日系/復古漢字字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- 畫面暗角與恐怖濾鏡層 -->
   <div id="vignette-overlay"></div>
 
-  <!-- 頂部常駐標題欄 -->
-  <header class="game-header">
-    <div class="title-container">
-      <h1 id="game-title">浴 室</h1>
-      <span id="title-sub">Routine 07:00 AM</span>
+  <!-- 1. 遊戲開始前：標題封面畫面 -->
+  <section id="title-screen" class="screen-view active">
+    <div class="title-wrapper">
+      <h1 class="main-pixel-title">浴 室</h1>
+      <button id="start-game-btn" class="pixel-link-btn">[ 開始遊戲 ]</button>
     </div>
-    <div class="status-container">
-      <span class="status-item">輪迴次回：<strong id="loop-count">1</strong></span>
-      <span class="status-item">真相認知：<strong id="truth-meter">0%</strong></span>
+  </section>
+
+  <!-- 2. 遊戲主畫面（極簡黑底文字探索） -->
+  <main id="game-screen" class="screen-view">
+    <!-- 頂部 Header：第一輪極簡，死亡後才解鎖次數 -->
+    <header class="game-hud">
+      <span id="hud-title" class="hud-title">浴室</span>
+      <span id="hud-deaths" class="hud-deaths hidden">輪迴次數：<span id="death-counter">0</span></span>
+    </header>
+
+    <!-- 打字機文字顯示區域 -->
+    <div id="text-viewport" class="text-viewport">
+      <div id="typewriter-output"></div>
+      <span id="cursor" class="blinking-cursor">_</span>
     </div>
-  </header>
 
-  <!-- 核心故事與互動區域 -->
-  <main class="game-container">
-    <section id="story-viewport" class="story-viewport">
-      <div id="story-text" class="story-text"></div>
-    </section>
-
-    <!-- 密碼輸入框（預設隱藏，解謎時由 JS 喚起） -->
-    <section id="input-container" class="input-container hidden">
-      <label id="input-prompt" for="puzzle-input">【請輸入檢索代碼或密碼】</label>
-      <div class="input-group">
-        <input type="text" id="puzzle-input" autocomplete="off" placeholder="請在此輸入...">
-        <button id="submit-btn" class="btn">確認</button>
+    <!-- 密碼輸入框（預設隱藏） -->
+    <div id="puzzle-box" class="puzzle-box hidden">
+      <div id="puzzle-prompt" class="puzzle-prompt"></div>
+      <div class="input-line">
+        <span class="prompt-arrow">&gt;</span>
+        <input type="text" id="puzzle-input" autofocus autocomplete="off" spellcheck="false">
+        <button id="puzzle-submit-btn" class="pixel-link-btn">[ 輸入 ]</button>
       </div>
-      <div id="input-feedback" class="input-feedback"></div>
-    </section>
+      <div id="puzzle-error" class="puzzle-error"></div>
+    </div>
 
-    <!-- 行動選項列表 -->
-    <section id="choices-container" class="choices-container"></section>
+    <!-- 純文字選項列表 -->
+    <div id="choices-wrapper" class="choices-wrapper"></div>
   </main>
 
-  <!-- 全螢幕死亡過場幕 -->
-  <div id="death-screen" class="death-screen hidden">
-    <div class="death-content">
-      <h2 id="death-title">意識中斷</h2>
-      <p id="death-reason">【請填入死亡描寫】</p>
-      <button id="wake-up-btn" class="btn death-btn">大口呼吸……</button>
+  <!-- 3. 死亡黑幕過場 -->
+  <section id="death-screen" class="screen-view">
+    <div class="death-wrapper">
+      <h2 class="death-header">—— 意 識 中 斷 ——</h2>
+      <p id="death-desc" class="death-desc"></p>
+      <button id="respawn-btn" class="pixel-link-btn">[ 大口呼吸…… ]</button>
     </div>
-  </div>
+  </section>
 
   <script src="script.js"></script>
 </body>
