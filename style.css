@@ -1,8 +1,8 @@
-/* 全黑極簡像素排版 */
+/* 全黑極簡像素排版 - 全面置中版 */
 :root {
   --bg-color: #000000;
   --text-main: #e0e0e0;
-  --text-dim: #555555;
+  --text-dim: #666666;
   --accent-red: #c92a2a;
   --font-pixel: "DotGothic16", monospace, sans-serif;
 }
@@ -51,6 +51,7 @@ body.corrupted #vignette-overlay {
   padding: 40px 24px;
   position: relative;
   z-index: 10;
+  text-align: center; /* 全域文字預設定義為置中 */
 }
 
 .screen-view.active {
@@ -62,7 +63,6 @@ body.corrupted #vignette-overlay {
 #title-screen {
   justify-content: center;
   align-items: center;
-  text-align: center;
 }
 
 .main-pixel-title {
@@ -73,19 +73,21 @@ body.corrupted #vignette-overlay {
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
 }
 
-/* 2. 主遊戲頂部 HUD */
+/* 2. 主遊戲頂部 HUD（標題置中，死亡次數浮動在右側或下方） */
 .game-hud {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 30px;
+  gap: 8px;
+  margin-bottom: 40px;
   border-bottom: 1px dashed #222;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
+  position: relative;
 }
 
 .hud-title {
-  font-size: 1.4rem;
-  letter-spacing: 0.2rem;
+  font-size: 1.5rem;
+  letter-spacing: 0.3rem;
   color: #fff;
   transition: all 0.5s ease;
 }
@@ -93,27 +95,35 @@ body.corrupted #vignette-overlay {
 .hud-title.corrupted {
   color: var(--accent-red);
   text-shadow: 0 0 10px rgba(201, 42, 42, 0.8);
-  letter-spacing: 0.35rem;
+  letter-spacing: 0.45rem;
 }
 
 .hud-deaths {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-dim);
+  letter-spacing: 0.1rem;
 }
 
-/* 3. 打字機文字區域 */
+/* 3. 打字機文字區域（徹底置中） */
 .text-viewport {
-  min-height: 220px;
-  line-height: 2.1;
+  min-height: 240px;
+  line-height: 2.2;
   font-size: 1.25rem;
   letter-spacing: 0.05rem;
   margin-bottom: 30px;
-  cursor: pointer; /* 點擊可快進文字 */
+  cursor: pointer;
+  text-align: center; /* 敘事段落置中 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #typewriter-output {
-  display: inline;
+  display: inline-block;
   white-space: pre-wrap;
+  text-align: center;
+  max-width: 640px;
 }
 
 .blinking-cursor {
@@ -128,22 +138,25 @@ body.corrupted #vignette-overlay {
   50%, 100% { opacity: 0; }
 }
 
-/* 4. 密碼輸入框 */
+/* 4. 密碼輸入框（置中排版） */
 .puzzle-box {
-  margin-bottom: 24px;
-  padding: 14px 0;
+  margin: 0 auto 30px auto;
+  padding: 16px 0;
   border-top: 1px solid #1a1a1a;
   border-bottom: 1px solid #1a1a1a;
+  max-width: 450px;
+  text-align: center;
 }
 
 .puzzle-prompt {
   font-size: 1.05rem;
   color: #888;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .input-line {
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 12px;
 }
@@ -161,7 +174,8 @@ body.corrupted #vignette-overlay {
   font-family: var(--font-pixel);
   font-size: 1.2rem;
   padding: 4px 8px;
-  flex: 1;
+  width: 160px;
+  text-align: center; /* 輸入文字置中 */
   outline: none;
 }
 
@@ -172,14 +186,15 @@ body.corrupted #vignette-overlay {
 .puzzle-error {
   color: var(--accent-red);
   font-size: 0.95rem;
-  margin-top: 8px;
+  margin-top: 10px;
   min-height: 1.2rem;
 }
 
-/* 5. 選項清單（極簡文字風格） */
+/* 5. 選項清單（置中陳列） */
 .choices-wrapper {
   display: flex;
   flex-direction: column;
+  align-items: center; /* 按鈕群置中 */
   gap: 16px;
   margin-top: auto;
 }
@@ -190,54 +205,4 @@ body.corrupted #vignette-overlay {
   border: none;
   color: #999;
   font-family: var(--font-pixel);
-  font-size: 1.15rem;
-  text-align: left;
-  cursor: pointer;
-  padding: 6px 0;
-  letter-spacing: 0.05rem;
-  transition: all 0.15s ease;
-}
-
-.pixel-choice-btn:hover,
-.pixel-link-btn:hover {
-  color: #ffffff;
-  padding-left: 10px;
-}
-
-/* 踩雷劃線選項 */
-.pixel-choice-btn.traumatized {
-  text-decoration: line-through;
-  color: #333333;
-}
-
-.pixel-choice-btn.traumatized:hover {
-  color: var(--accent-red);
-  padding-left: 0;
-}
-
-/* 6. 死亡全黑過場 */
-#death-screen {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.death-header {
-  font-size: 2rem;
-  color: var(--accent-red);
-  letter-spacing: 0.4rem;
-  margin-bottom: 24px;
-}
-
-.death-desc {
-  font-size: 1.1rem;
-  line-height: 1.9;
-  color: #888;
-  max-width: 540px;
-  margin-bottom: 40px;
-  white-space: pre-wrap;
-}
-
-.hidden {
-  display: none !important;
-}
+  font-size: 1.15
