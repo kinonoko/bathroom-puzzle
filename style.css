@@ -1,0 +1,255 @@
+/* 全域設定與暗黑基調 */
+:root {
+  --bg-color: #0f1115;
+  --text-main: #dcdcdc;
+  --text-dim: #7a828e;
+  --accent-cyan: #4ec9b0;
+  --accent-red: #c94e4e;
+  --panel-bg: rgba(22, 27, 34, 0.85);
+  --border-color: #30363d;
+  --vignette-color: rgba(0, 0, 0, 0.8);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Noto Sans TC", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 氛圍暗角特效 */
+#vignette-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  box-shadow: inset 0 0 100px var(--vignette-color);
+  transition: box-shadow 1.2s ease, background 1.2s ease;
+  z-index: 10;
+}
+
+/* 真相質變後的恐怖陰影 */
+body.corrupted #vignette-overlay {
+  box-shadow: inset 0 0 150px rgba(180, 20, 20, 0.55);
+}
+
+/* 頂部 Header */
+.game-header {
+  width: 100%;
+  max-width: 800px;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-color);
+  z-index: 20;
+}
+
+#game-title {
+  font-size: 1.8rem;
+  letter-spacing: 0.35rem;
+  color: #fff;
+  transition: color 0.8s ease, text-shadow 0.8s ease;
+}
+
+/* 標題變異為「浴逝」時的暗紅樣式 */
+#game-title.corrupted {
+  color: var(--accent-red);
+  text-shadow: 0 0 12px rgba(201, 78, 78, 0.7);
+  letter-spacing: 0.45rem;
+  animation: glitch 3s infinite alternate;
+}
+
+#title-sub {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-left: 8px;
+}
+
+.status-container {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.status-item {
+  margin-left: 16px;
+}
+
+.status-item strong {
+  color: var(--accent-cyan);
+}
+
+body.corrupted .status-item strong {
+  color: var(--accent-red);
+}
+
+/* 主面板容器 */
+.game-container {
+  width: 100%;
+  max-width: 800px;
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 20;
+}
+
+/* 故事文本框 */
+.story-viewport {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 24px;
+  min-height: 240px;
+  line-height: 1.85;
+  font-size: 1.05rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.story-text p {
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+
+/* 輸入框樣式 */
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  padding: 16px;
+  border-radius: 6px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+#puzzle-input {
+  flex: 1;
+  padding: 10px 14px;
+  background: #090d13;
+  border: 1px solid var(--border-color);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+#puzzle-input:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}
+
+.input-feedback {
+  font-size: 0.85rem;
+  color: var(--accent-red);
+  min-height: 1.2rem;
+}
+
+/* 選項按鈕區 */
+.choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn {
+  background: #1f242c;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 0.98rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background: #2b323c;
+  border-color: var(--accent-cyan);
+  color: #fff;
+  padding-left: 22px;
+}
+
+/* 踩雷後劃線禁忌選項 */
+.btn.disabled-trauma {
+  text-decoration: line-through;
+  color: #555b66;
+  border-color: #242830;
+  background: #14171d;
+}
+
+.btn.disabled-trauma:hover {
+  border-color: var(--accent-red);
+  color: #8f6262;
+  padding-left: 18px;
+}
+
+/* 死亡過場 */
+.death-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.death-content {
+  text-align: center;
+  max-width: 500px;
+  padding: 30px;
+}
+
+#death-title {
+  color: var(--accent-red);
+  font-size: 2rem;
+  letter-spacing: 0.3rem;
+  margin-bottom: 16px;
+}
+
+#death-reason {
+  color: var(--text-dim);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.death-btn {
+  text-align: center;
+  display: inline-block;
+  padding: 12px 30px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+  100% { transform: translate(0); }
+}
