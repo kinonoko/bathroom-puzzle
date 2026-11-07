@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="tab-title">浴室 - Routine 07:00</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 畫面暗角與恐怖濾鏡層 -->
+  <div id="vignette-overlay"></div>
+
+  <!-- 頂部常駐標題欄 -->
+  <header class="game-header">
+    <div class="title-container">
+      <h1 id="game-title">浴 室</h1>
+      <span id="title-sub">Routine 07:00 AM</span>
+    </div>
+    <div class="status-container">
+      <span class="status-item">輪迴次回：<strong id="loop-count">1</strong></span>
+      <span class="status-item">真相認知：<strong id="truth-meter">0%</strong></span>
+    </div>
+  </header>
+
+  <!-- 核心故事與互動區域 -->
+  <main class="game-container">
+    <section id="story-viewport" class="story-viewport">
+      <div id="story-text" class="story-text"></div>
+    </section>
+
+    <!-- 密碼輸入框（預設隱藏，解謎時由 JS 喚起） -->
+    <section id="input-container" class="input-container hidden">
+      <label id="input-prompt" for="puzzle-input">【請輸入檢索代碼或密碼】</label>
+      <div class="input-group">
+        <input type="text" id="puzzle-input" autocomplete="off" placeholder="請在此輸入...">
+        <button id="submit-btn" class="btn">確認</button>
+      </div>
+      <div id="input-feedback" class="input-feedback"></div>
+    </section>
+
+    <!-- 行動選項列表 -->
+    <section id="choices-container" class="choices-container"></section>
+  </main>
+
+  <!-- 全螢幕死亡過場幕 -->
+  <div id="death-screen" class="death-screen hidden">
+    <div class="death-content">
+      <h2 id="death-title">意識中斷</h2>
+      <p id="death-reason">【請填入死亡描寫】</p>
+      <button id="wake-up-btn" class="btn death-btn">大口呼吸……</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
