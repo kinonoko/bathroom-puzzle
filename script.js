@@ -4,20 +4,16 @@
 const SoundManager = {
   enabled: true,
 
-  soundPaths: {
-    type: 'sound/type.mp3',
-    alarm: 'sound/alarm.mp3',
-    death: 'sound/death.mp3'
+  audioFiles: {
+    type: new Audio('sound/type.mp3'),
+    alarm: new Audio('sound/alarm.mp3'),
+    death: new Audio('sound/death.mp3'),
   },
 
-  play(name) {
-    if (!this.enabled || !this.soundPaths[name]) return;
-    try {
-      const audio = new Audio(this.soundPaths[name]);
-      if (name === 'death') audio.volume = 0.6;
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
-    } catch (err) {}
+  init() {
+    if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 1.0;
+    if (this.audioFiles.death) this.audioFiles.death.volume = 0.6;
+    if (this.audioFiles.type) this.audioFiles.type.volume = 0.4;
   },
 
   toggle() {
@@ -25,6 +21,18 @@ const SoundManager = {
     return this.enabled;
   },
 
+  play(name) {
+    if (!this.enabled || !this.audioFiles) return;
+    try {
+      const sound = this.audioFiles[name];
+      if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+      }
+    } catch (err) {}
+  },
+
+  // 補齊所有在程式碼中被呼叫到的音效函式，保證永不報錯
   playGameStart()   { this.play('alarm'); },
   playTypeTick()    { this.play('type'); },
   playWaterDrip()   { this.play('drip'); },
@@ -87,7 +95,7 @@ const ItemData = {
 };
 
 /* =====================================================================
-   3. 劇情場景圖
+   3. 劇情場景圖與階梯式甦醒文本
    ===================================================================== */
 const Scenes = {
   bedroom_wake: {
@@ -477,89 +485,105 @@ const Endings = {
 };
 
 /* =====================================================================
-   5. 全域事件監聽與初始化
+   5. 流程控制、打字機與事件監聽（雙向相容與全域防呆）
    ===================================================================== */
 let typewriterTimer = null;
 let isTypewriting = false;
 let currentFullText = '';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const elTitleScreen = document.getElementById('title-screen');
-  const elPlayArea = document.getElementById('play-area') || document.getElementById('game-screen');
-  const elStartBtn = document.getElementById('start-game-btn');
-  const elAudioBtn = document.getElementById('audio-toggle-btn');
-  const elRestartBtn = document.getElementById('restart-btn');
-  const elDialogBox = document.getElementById('dialog-box') || document.getElementById('text-viewport');
-  const elDeathOverlay = document.getElementById('death-overlay') || document.getElementById('death-screen');
-  const elEndingRestart = document.getElementById('ending-restart-btn');
-  const elEndingOverlay = document.getElementById('ending-overlay');
-  const elModalClose = document.getElementById('modal-close-btn');
-  const elItemModal = document.getElementById('item-modal');
-  const elConfirmModal = document.getElementById('confirm-modal');
-  const elConfirmCancel = document.getElementById('confirm-cancel-btn');
-  const elConfirmOk = document.getElementById('confirm-ok-btn');
+const elTitleScreen = document.getElementById('title-screen');
+const elPlayArea = document.getElementById('play-area') || document.getElementById('game-screen');
+const elStartBtn = document.getElementById('start-game-btn');
+const elHudTitle = document.getElementById('hud-title');
+const elHudLoop = document.getElementById('hud-loop') || document.getElementById('hud-deaths');
+const elAudioBtn = document.getElementById('audio-toggle-btn');
+const elRestartBtn = document.getElementById('restart-btn');
+const elSceneLoc = document.getElementById('scene-location');
+const elSceneTime = document.getElementById('scene-time');
+const elDialogBox = document.getElementById('dialog-box') || document.getElementById('text-viewport');
+const elTypeText = document.getElementById('typewriter-text') || document.getElementById('typewriter-output');
+const elCursor = document.getElementById('terminal-cursor') || document.getElementById('cursor');
+const elChoices = document.getElementById('choices-container') || document.getElementById('choices-wrapper');
+const elTraumaBox = document.getElementById('trauma-box');
+const elItemsList = document.getElementById('items-list');
 
-  // 開始遊戲
-  if (elStartBtn) {
-    elStartBtn.addEventListener('click', () => {
-      SoundManager.playGameStart();
-      GameState.started = true;
-      if (elTitleScreen) elTitleScreen.style.display = 'none';
-      if (elPlayArea) {
-        elPlayArea.style.display = 'flex';
-        elPlayArea.classList.add('active');
-      }
-      renderScene('bedroom_wake');
-    });
-  }
+const elDeathOverlay = document.getElementById('death-overlay') || document.getElementById('death-screen');
+const elDeathReason = document.getElementById('death-reason') || document.getElementById('death-desc');
+const elDeathFlash = document.getElementById('death-flash');
+const elEndingOverlay = document.getElementById('ending-overlay');
+const elEndingTag = document.getElementById('ending-tag');
+const elEndingTitle = document.getElementById('ending-title');
+const elEndingDesc = document.getElementById('ending-desc');
+const elEndingRestart = document.getElementById('ending-restart-btn');
+const elItemModal = document.getElementById('item-modal');
+const elModalTitle = document.getElementById('modal-item-title');
+const elModalDesc = document.getElementById('modal-item-desc');
+const elModalClose = document.getElementById('modal-close-btn');
 
-  // 聲音開關
-  if (elAudioBtn) {
-    elAudioBtn.addEventListener('click', () => {
-      const state = SoundManager.toggle();
-      elAudioBtn.textContent = state ? '[ 聲音: 開 ]' : '[ 聲音: 關 ]';
-    });
-  }
+const elConfirmModal = document.getElementById('confirm-modal');
+const elConfirmCancel = document.getElementById('confirm-cancel-btn');
+const elConfirmOk = document.getElementById('confirm-ok-btn');
 
-  // 重啟與確認視窗
-  if (elRestartBtn) {
-    elRestartBtn.addEventListener('click', () => {
-      SoundManager.playTypeTick();
-      if (elConfirmModal) elConfirmModal.style.display = 'flex';
-    });
-  }
+if (elStartBtn) {
+  elStartBtn.addEventListener('click', () => {
+    SoundManager.init();
+    SoundManager.playGameStart();
+    
+    GameState.started = true;
+    if (elTitleScreen) elTitleScreen.style.display = 'none';
+    if (elPlayArea) {
+      elPlayArea.style.display = 'flex';
+      elPlayArea.classList.add('active');
+    }
+    renderScene('bedroom_wake');
+  });
+}
 
-  if (elConfirmCancel) {
-    elConfirmCancel.addEventListener('click', () => {
-      SoundManager.playTypeTick();
-      if (elConfirmModal) elConfirmModal.style.display = 'none';
-    });
-  }
+if (elAudioBtn) {
+  elAudioBtn.addEventListener('click', () => {
+    SoundManager.init();
+    const state = SoundManager.toggle();
+    elAudioBtn.textContent = state ? '[ 聲音: 開 ]' : '[ 聲音: 關 ]';
+  });
+}
 
-  if (elConfirmOk) {
-    elConfirmOk.addEventListener('click', () => {
-      SoundManager.playTypeTick();
-      if (elConfirmModal) elConfirmModal.style.display = 'none';
-      fullReset();
-    });
-  }
+if (elRestartBtn) {
+  elRestartBtn.addEventListener('click', () => {
+    SoundManager.playTypeTick();
+    if (elConfirmModal) elConfirmModal.style.display = 'flex';
+  });
+}
 
-  if (elDialogBox) elDialogBox.addEventListener('click', skipTypewriter);
-  if (elDeathOverlay) elDeathOverlay.addEventListener('click', awakenFromDeath);
+if (elConfirmCancel) {
+  elConfirmCancel.addEventListener('click', () => {
+    SoundManager.playTypeTick();
+    if (elConfirmModal) elConfirmModal.style.display = 'none';
+  });
+}
 
-  if (elEndingRestart) {
-    elEndingRestart.addEventListener('click', () => {
-      if (elEndingOverlay) elEndingOverlay.style.display = 'none';
-      fullReset();
-    });
-  }
+if (elConfirmOk) {
+  elConfirmOk.addEventListener('click', () => {
+    SoundManager.playTypeTick();
+    if (elConfirmModal) elConfirmModal.style.display = 'none';
+    fullReset();
+  });
+}
 
-  if (elModalClose) {
-    elModalClose.addEventListener('click', () => {
-      if (elItemModal) elItemModal.style.display = 'none';
-    });
-  }
-});
+if (elDialogBox) elDialogBox.addEventListener('click', skipTypewriter);
+if (elDeathOverlay) elDeathOverlay.addEventListener('click', awakenFromDeath);
+
+if (elEndingRestart) {
+  elEndingRestart.addEventListener('click', () => {
+    if (elEndingOverlay) elEndingOverlay.style.display = 'none';
+    fullReset();
+  });
+}
+
+if (elModalClose) {
+  elModalClose.addEventListener('click', () => {
+    if (elItemModal) elItemModal.style.display = 'none';
+  });
+}
 
 function increaseTruth(delta) {
   GameState.truth = Math.min(100, GameState.truth + delta);
@@ -575,7 +599,6 @@ function triggerTruthMutation() {
   
   document.body.classList.add('truth-high');
   document.body.classList.add('corrupted');
-  const elHudTitle = document.getElementById('hud-title');
   if (elHudTitle) {
     elHudTitle.textContent = '浴䶮';
     elHudTitle.classList.add('mutated');
@@ -592,10 +615,6 @@ function renderScene(sceneId) {
   if (!scene) return;
 
   GameState.currentSceneId = sceneId;
-  const elSceneLoc = document.getElementById('scene-location');
-  const elSceneTime = document.getElementById('scene-time');
-  const elTraumaBox = document.getElementById('trauma-box');
-
   if (elSceneLoc) elSceneLoc.textContent = scene.location;
   if (elSceneTime) elSceneTime.textContent = scene.time;
   if (elTraumaBox) elTraumaBox.style.display = 'none';
@@ -617,11 +636,6 @@ function startTypewriter(text, onComplete) {
   if (typewriterTimer) clearInterval(typewriterTimer);
   isTypewriting = true;
   currentFullText = text;
-  
-  const elTypeText = document.getElementById('typewriter-text') || document.getElementById('typewriter-output');
-  const elChoices = document.getElementById('choices-container') || document.getElementById('choices-wrapper');
-  const elCursor = document.getElementById('terminal-cursor') || document.getElementById('cursor');
-
   if (elTypeText) elTypeText.textContent = '';
   if (elChoices) elChoices.innerHTML = '';
   if (elCursor) elCursor.style.display = 'inline-block';
@@ -649,7 +663,6 @@ function startTypewriter(text, onComplete) {
 function skipTypewriter() {
   if (!isTypewriting) return;
   if (typewriterTimer) clearInterval(typewriterTimer);
-  const elTypeText = document.getElementById('typewriter-text') || document.getElementById('typewriter-output');
   if (elTypeText) elTypeText.textContent = currentFullText;
   finishTypewriter(() => {
     const scene = Scenes[GameState.currentSceneId];
@@ -660,13 +673,11 @@ function skipTypewriter() {
 function finishTypewriter(callback) {
   if (typewriterTimer) clearInterval(typewriterTimer);
   isTypewriting = false;
-  const elCursor = document.getElementById('terminal-cursor') || document.getElementById('cursor');
   if (elCursor) elCursor.style.display = 'inline-block';
   if (callback) callback();
 }
 
 function renderChoices(scene) {
-  const elChoices = document.getElementById('choices-container') || document.getElementById('choices-wrapper');
   if (!elChoices) return;
   elChoices.innerHTML = '';
   const choices = typeof scene.choices === 'function' ? scene.choices() : scene.choices;
@@ -729,8 +740,6 @@ function handleChoiceClick(choice) {
 
 function triggerTraumaRecoil(text) {
   SoundManager.playHeartbeat();
-  const elTraumaBox = document.getElementById('trauma-box');
-  const elTypeText = document.getElementById('typewriter-text') || document.getElementById('typewriter-output');
   if (elTraumaBox) {
     elTraumaBox.textContent = text;
     elTraumaBox.style.display = 'block';
@@ -752,10 +761,6 @@ function triggerDeath(choiceId, deathKey) {
     desc: '眼前逐漸陷入一片黑暗... 意識墜入無底深淵'
   };
 
-  const elDeathReason = document.getElementById('death-reason') || document.getElementById('death-desc');
-  const elDeathFlash = document.getElementById('death-flash');
-  const elDeathOverlay = document.getElementById('death-overlay') || document.getElementById('death-screen');
-
   if (elDeathReason) elDeathReason.textContent = deathInfo.desc;
 
   if (elDeathFlash) {
@@ -775,7 +780,6 @@ function triggerDeath(choiceId, deathKey) {
 
 function awakenFromDeath() {
   GameState.isDead = false;
-  const elDeathOverlay = document.getElementById('death-overlay') || document.getElementById('death-screen');
   if (elDeathOverlay) {
     elDeathOverlay.style.display = 'none';
     elDeathOverlay.classList.add('hidden');
@@ -790,7 +794,6 @@ function awakenFromDeath() {
 }
 
 function updateHud() {
-  const elHudLoop = document.getElementById('hud-loop') || document.getElementById('hud-deaths');
   if (elHudLoop) {
     if (GameState.deaths > 0) {
       elHudLoop.classList.add('visible');
@@ -808,7 +811,6 @@ function updateHud() {
 }
 
 function updateInventoryBar() {
-  const elItemsList = document.getElementById('items-list');
   if (!elItemsList) return;
   const keys = Object.keys(GameState.inventory);
   elItemsList.innerHTML = '';
@@ -831,9 +833,6 @@ function updateInventoryBar() {
 
 function showItemModal(item) {
   SoundManager.playTypeTick();
-  const elModalTitle = document.getElementById('modal-item-title');
-  const elModalDesc = document.getElementById('modal-item-desc');
-  const elItemModal = document.getElementById('item-modal');
   if (elModalTitle) elModalTitle.textContent = item.name;
   if (elModalDesc) elModalDesc.textContent = item.desc;
   if (elItemModal) elItemModal.style.display = 'flex';
@@ -842,12 +841,6 @@ function showItemModal(item) {
 function showEnding(type) {
   GameState.isEnding = true;
   const end = Endings[type];
-  const elEndingTag = document.getElementById('ending-tag');
-  const elEndingTitle = document.getElementById('ending-title');
-  const elEndingDesc = document.getElementById('ending-desc');
-  const elEndingRestart = document.getElementById('ending-restart-btn');
-  const elEndingOverlay = document.getElementById('ending-overlay');
-
   if (elEndingTag) elEndingTag.textContent = end.tag;
   if (elEndingTitle) elEndingTitle.textContent = end.title;
   if (elEndingDesc) elEndingDesc.textContent = end.desc;
@@ -893,11 +886,6 @@ function fullReset() {
 
   document.body.classList.remove('truth-high');
   document.body.classList.remove('corrupted');
-  const elHudTitle = document.getElementById('hud-title');
-  const elHudLoop = document.getElementById('hud-loop') || document.getElementById('hud-deaths');
-  const elPlayArea = document.getElementById('play-area') || document.getElementById('game-screen');
-  const elTitleScreen = document.getElementById('title-screen');
-
   if (elHudTitle) {
     elHudTitle.textContent = '浴室';
     elHudTitle.classList.remove('mutated');
