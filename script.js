@@ -5,7 +5,7 @@ const SoundManager = {
   enabled: true,
 
   audioFiles: {
-    alarm: new Audio('sounds/alarm.mp3'),
+    alarm: new Audio('/sounds/alarm.mp3'),
   },
 
   init() {
