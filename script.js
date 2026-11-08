@@ -6,11 +6,12 @@ const SoundManager = {
 
   audioFiles: {
     alarm: new Audio('sound/alarm.mp3'),
+    death: new Audio('sound/death.mp3'),
   },
 
   init() {
-    if (this.audioFiles && this.audioFiles.alarm) {
-      this.audioFiles.alarm.volume = 1.0;
+    if (this.audioFile.alarm) this.audioFiles.alarm.volume = 1.0;
+    if (this.audioFile.death) this.audioFiles.death.volume = 0.6;
     }
   },
 
@@ -758,7 +759,7 @@ function triggerDeath(choiceId, deathKey) {
 
   const deathInfo = Deaths[deathKey] || {
     title: '【 你 死 了 】',
-    desc: '意識被深冷的水流無情吞噬。'
+    desc: '眼前逐漸陷入一片黑暗... 意識墜入無底深淵'
   };
 
   if (elDeathReason) elDeathReason.textContent = deathInfo.desc;
