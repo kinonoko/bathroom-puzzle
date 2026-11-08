@@ -7,12 +7,10 @@ const SoundManager = {
   // 1. 預載你的音效檔案
   audioFiles: {
     alarm: new Audio('sounds/alarm.mp3'),
-    type: new Audio('sounds/type.mp3'),
   },
 
   init() {
     if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 0.2;
-    if (this.audioFiles.type) this.audioFiles.type.volume = 0.2;
   },
 
   toggle() {
@@ -31,7 +29,6 @@ const SoundManager = {
 
   // 現有對應的音效
   playGameStart()   { this.play('alarm'); },
-  playTypeTick()    { this.play('type'); },
 
   // 其他暫時沒有音檔的函式留空，避免遊戲執行時報錯當掉
   playWaterDrip()   {},
