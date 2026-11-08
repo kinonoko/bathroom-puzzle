@@ -1,16 +1,17 @@
 /* =====================================================================
-   1. 音效管理器（支援自訂音檔，缺少的音效先留空不報錯）
+   1. 音效管理器（支援自訂音檔，缺少的函式已補齊防呆）
    ===================================================================== */
 const SoundManager = {
   enabled: true,
 
-  // 1. 預載你的音效檔案
   audioFiles: {
     alarm: new Audio('sounds/alarm.mp3'),
   },
 
   init() {
-    if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 1.0;
+    if (this.audioFiles && this.audioFiles.alarm) {
+      this.audioFiles.alarm.volume = 1.0;
+    }
   },
 
   toggle() {
@@ -18,29 +19,27 @@ const SoundManager = {
     return this.enabled;
   },
 
-play(name) {
+  play(name) {
     if (!this.enabled || !this.audioFiles) return;
     try {
       const sound = this.audioFiles[name];
       if (sound) {
-        sound.currentTime = 0; // 若檔案不存在，這裡容易報錯
+        sound.currentTime = 0;
         sound.play().catch(() => {});
       }
-    } catch (err) {
-      // 避免因找不到音檔或載入失敗讓整個遊戲卡死
-    }
+    } catch (err) {}
   },
 
-  // 現有對應的音效
+  // 補齊所有在程式碼中被呼叫到的音效函式，保證永不報錯
   playGameStart()   { this.play('alarm'); },
-
-  // 其他暫時沒有音檔的函式留空，避免遊戲執行時報錯當掉
-  playWaterDrip()   {},
-  playDeathSound()  {},
-  playHeartbeat()   {},
-  playAwakenChime() {},
-  playGlitchBurst() {}
+  playTypeTick()    { this.play('type'); },
+  playWaterDrip()   { this.play('drip'); },
+  playDeathSound()  { this.play('death'); },
+  playHeartbeat()   { this.play('heartbeat'); },
+  playAwakenChime() { this.play('awaken'); },
+  playGlitchBurst() { this.play('glitch'); }
 };
+
 /* =====================================================================
    2. 遊戲狀態與物品定義
    ===================================================================== */
@@ -101,70 +100,32 @@ const Scenes = {
     location: '【 臥室 】',
     time: '07:00',
     text: () => {
-      // 0 次：最初開局趕高鐵
       if (GameState.deaths === 0) {
         return `後腦傳出像是被鈍器重擊的劇痛，視線逐漸聚焦。艱難地舉起冰涼僵硬的手關掉還在鳴響的鬧鐘，看到大大的7:00，整個人立刻嚇得彈起身。\n\n再不出門就要趕不上高鐵了！！！`;
-      }
-      // 1 次：第一次死亡甦醒的驚魂與僥倖
-      else if (GameState.deaths === 1) {
+      } else if (GameState.deaths === 1) {
         return `「哈...哈...」你忍不住大喘著粗氣試圖平復呼吸，全身彷彿還定格在方才的可怕遭遇中，止不住的顫抖。\n\n「是惡夢嗎...？」你僥倖地想著。\n\n定睛一看時間依舊定格在 7:00 。不，這肯定有什麼不對勁。`;
-      }
-      // 2 ~ 3 次：意識到深陷異常囚籠的恐慌
-      else if (GameState.deaths < 4) {
+      } else if (GameState.deaths < 4) {
         return `「呼——哈——！」你再次從床頭猛地驚醒，手心滿是冷汗。\n\n鬧鐘指針依然冰冷地指著 07:00。\n無論是深淵、黑水還是被地磚吞噬的痛楚... 那些絕不是單純的惡夢。這棟公寓，正用某種未知的方式將你囚禁在此。`;
-      }
-      // 4 ~ 6 次：創傷烙印於骨髓、精神磨損
-      else if (GameState.deaths < 7) {
+      } else if (GameState.deaths < 7) {
         return `又一次醒來。每一次死亡的窒息與絞痛，都化作實質的幻痛刻進了骨髓。\n\n你抱著頭蜷縮在床頭，指尖不受控制地抽搐。\n07:00... 又是 07:00。精神逐漸在清醒與瘋狂的邊緣磨損，外頭的水滴聲彷彿正一滴一滴敲打著你的神經。`;
-      }
-      // 7 次以上：徹底麻木、面對無盡輪迴的死寂
-      else {
+      } else {
         return `「...」\n\n你麻木地睜開眼睛，甚至連驚呼或喘息都已經不再產生。\n指針死死停在 07:00。死亡已經無法再讓你感到意外，你只是平靜地看著天花板，在無盡的絕望輪迴中，默默等待著某種轉機。`;
       }
     },
     choices: () => {
-      // 第 0 輪（未死亡時）：三種必定致死開局選項
       if (GameState.deaths === 0) {
         return [
-          {
-            id: 'init_toilet',
-            label: '去廁所洗漱',
-            action: 'fatal_init_toilet',
-            isFatal: true
-          },
-          {
-            id: 'init_rush',
-            label: '抓起背包就衝出門',
-            action: 'fatal_init_rush',
-            isFatal: true
-          },
-          {
-            id: 'init_slow',
-            label: '慢慢地做準備',
-            action: 'fatal_init_slow',
-            isFatal: true
-          }
+          { id: 'init_toilet', label: '去廁所洗漱', action: 'fatal_init_toilet', isFatal: true },
+          { id: 'init_rush', label: '抓起背包就衝出門', action: 'fatal_init_rush', isFatal: true },
+          { id: 'init_slow', label: '慢慢地做準備', action: 'fatal_init_slow', isFatal: true }
         ];
       }
-      // 第 1 輪甦醒後：解鎖公寓主線探索
       const list = [];
       if (!GameState.flags.readPrescription) {
-        list.push({
-          id: 'examine_bedside',
-          label: '查看床頭櫃上的藥瓶與日曆',
-          action: 'examine_bedside'
-        });
+        list.push({ id: 'examine_bedside', label: '查看床頭櫃上的藥瓶與日曆', action: 'examine_bedside' });
       }
-      list.push({
-        id: 'go_corridor',
-        label: '順著地上的濕漉水痕走向走廊',
-        action: 'corridor'
-      });
-      list.push({
-        id: 'try_front_door',
-        label: '嘗試走向玄關，逃離這間公寓',
-        action: 'front_door'
-      });
+      list.push({ id: 'go_corridor', label: '順著地上的濕漉水痕走向走廊', action: 'corridor' });
+      list.push({ id: 'try_front_door', label: '嘗試走向玄關，逃離這間公寓', action: 'front_door' });
       return list;
     }
   },
@@ -206,11 +167,7 @@ const Scenes = {
       ];
 
       if (!GameState.flags.readMirrorNote) {
-        list.push({
-          id: 'examine_mirror_frame',
-          label: '仔細檢查鏡框周圍的紙條',
-          action: 'examine_mirror_frame'
-        });
+        list.push({ id: 'examine_mirror_frame', label: '仔細檢查鏡框周圍的紙條', action: 'examine_mirror_frame' });
       }
 
       list.push({
@@ -222,25 +179,11 @@ const Scenes = {
       });
 
       if (!GameState.flags.checkedFridge) {
-        list.push({
-          id: 'check_fridge_note',
-          label: '檢查冰箱門上貼著的便利貼',
-          action: 'check_fridge_note'
-        });
+        list.push({ id: 'check_fridge_note', label: '檢查冰箱門上貼著的便利貼', action: 'check_fridge_note' });
       }
 
-      list.push({
-        id: 'enter_bathroom',
-        label: '深吸一口氣，推開浴室的門',
-        action: 'bathroom_door'
-      });
-
-      list.push({
-        id: 'back_bedroom',
-        label: '退回臥室',
-        action: 'bedroom_wake'
-      });
-
+      list.push({ id: 'enter_bathroom', label: '深吸一口氣，推開浴室的門', action: 'bathroom_door' });
+      list.push({ id: 'back_bedroom', label: '退回臥室', action: 'bedroom_wake' });
       return list;
     }
   },
@@ -257,9 +200,7 @@ const Scenes = {
         increaseTruth(15);
       }
     },
-    choices: () => [
-      { id: 'back_corridor', label: '回到走廊', action: 'corridor' }
-    ]
+    choices: () => [{ id: 'back_corridor', label: '回到走廊', action: 'corridor' }]
   },
 
   check_fridge_note: {
@@ -274,9 +215,7 @@ const Scenes = {
         increaseTruth(10);
       }
     },
-    choices: () => [
-      { id: 'back_corridor', label: '回到走廊', action: 'corridor' }
-    ]
+    choices: () => [{ id: 'back_corridor', label: '回到走廊', action: 'corridor' }]
   },
 
   front_door: {
@@ -332,49 +271,24 @@ const Scenes = {
       ];
 
       if (!GameState.flags.hasKey) {
-        list.push({
-          id: 'careful_drain',
-          label: '用旁邊的小鑷子小心夾取排水孔裡的異物',
-          action: 'careful_drain'
-        });
+        list.push({ id: 'careful_drain', label: '用旁邊的小鑷子小心夾取排水孔裡的異物', action: 'careful_drain' });
       }
 
       if (GameState.flags.hasTowel && !GameState.flags.wipedMirror) {
-        list.push({
-          id: 'wipe_mirror',
-          label: '用乾毛巾擦拭起霧的鏡子',
-          action: 'wipe_mirror'
-        });
+        list.push({ id: 'wipe_mirror', label: '用乾毛巾擦拭起霧的鏡子', action: 'wipe_mirror' });
       } else if (!GameState.flags.wipedMirror) {
-        list.push({
-          id: 'try_wipe_mirror_hand',
-          label: '用手掌抹去鏡面上的霧氣',
-          action: 'try_wipe_mirror_hand'
-        });
+        list.push({ id: 'try_wipe_mirror_hand', label: '用手掌抹去鏡面上的霧氣', action: 'try_wipe_mirror_hand' });
       }
 
       if (GameState.flags.hasKey && !GameState.flags.cabinetUnlocked) {
-        list.push({
-          id: 'unlock_cabinet',
-          label: '用黃銅鑰匙打開洗手台鏡櫃',
-          action: 'unlock_cabinet'
-        });
+        list.push({ id: 'unlock_cabinet', label: '用黃銅鑰匙打開洗手台鏡櫃', action: 'unlock_cabinet' });
       }
 
       if (GameState.flags.hasTape && !GameState.flags.playedTape) {
-        list.push({
-          id: 'play_tape',
-          label: '將錄音帶放入台面的錄音機中按下播放',
-          action: 'play_tape'
-        });
+        list.push({ id: 'play_tape', label: '將錄音帶放入台面的錄音機中按下播放', action: 'play_tape' });
       }
 
-      list.push({
-        id: 'back_bath_center',
-        label: '退回浴室中央',
-        action: 'bathroom_door'
-      });
-
+      list.push({ id: 'back_bath_center', label: '退回浴室中央', action: 'bathroom_door' });
       return list;
     }
   },
@@ -389,9 +303,7 @@ const Scenes = {
       GameState.flags.hasKey = true;
       GameState.inventory.key = ItemData.key;
     },
-    choices: () => [
-      { id: 'back_sink', label: '繼續留在洗手台前', action: 'sink_area' }
-    ]
+    choices: () => [{ id: 'back_sink', label: '繼續留在洗手台前', action: 'sink_area' }]
   },
 
   try_wipe_mirror_hand: {
@@ -400,9 +312,7 @@ const Scenes = {
     text: () => {
       return `你試圖用手掌擦拭鏡子，但潮濕的霧氣很快又重新凝結。\n鏡面深處隱隱約約有血紅色的筆劃在跳動，但光靠濕冷的手掌根本擦不乾淨。\n你可能需要一條乾燥的毛巾。`;
     },
-    choices: () => [
-      { id: 'back_sink', label: '回到洗手台', action: 'sink_area' }
-    ]
+    choices: () => [{ id: 'back_sink', label: '回到洗手台', action: 'sink_area' }]
   },
 
   wipe_mirror: {
@@ -415,9 +325,7 @@ const Scenes = {
       GameState.flags.wipedMirror = true;
       increaseTruth(20);
     },
-    choices: () => [
-      { id: 'back_sink', label: '壓抑住劇烈的心跳，回到洗手台', action: 'sink_area' }
-    ]
+    choices: () => [{ id: 'back_sink', label: '壓抑住劇烈的心跳，回到洗手台', action: 'sink_area' }]
   },
 
   unlock_cabinet: {
@@ -433,9 +341,7 @@ const Scenes = {
       GameState.inventory.towel = ItemData.towel;
       GameState.inventory.tape = ItemData.tape;
     },
-    choices: () => [
-      { id: 'back_sink', label: '關上櫃門，留在洗手台', action: 'sink_area' }
-    ]
+    choices: () => [{ id: 'back_sink', label: '關上櫃門，留在洗手台', action: 'sink_area' }]
   },
 
   play_tape: {
@@ -466,7 +372,6 @@ const Scenes = {
     },
     choices: () => {
       const list = [];
-
       if (!GameState.flags.drainedTub) {
         list.push({
           id: 'fatal_rip_curtain',
@@ -475,18 +380,9 @@ const Scenes = {
           isFatal: true,
           traumaText: '【創傷記憶】浴簾扯開的瞬間，一雙毫無血色的浮腫雙手猛然從黑水裡破水而出，狠狠卡住你的脖頸將你硬拖進無底的冰水！你驚恐地縮回雙手狂退數步，大口喘息，絕不再去盲目扯它！'
         });
-
-        list.push({
-          id: 'pull_chain',
-          label: '伸手拉起浴缸外沿垂掛的排水鐵鏈，拔開排水塞',
-          action: 'pull_chain'
-        });
+        list.push({ id: 'pull_chain', label: '伸手拉起浴缸外沿垂掛的排水鐵鏈，拔開排水塞', action: 'pull_chain' });
       } else {
-        list.push({
-          id: 'examine_photo',
-          label: '走進浴缸，撿起底部的照片與速寫本',
-          action: 'examine_photo'
-        });
+        list.push({ id: 'examine_photo', label: '走進浴缸，撿起底部的照片與速寫本', action: 'examine_photo' });
 
         if (GameState.truth >= 70) {
           list.push({
@@ -495,20 +391,13 @@ const Scenes = {
             action: 'ending_true'
           });
         }
-
         list.push({
           id: 'drown_choice',
           label: '【沉溺】躺進冰冷的浴缸中，閉上雙眼迎接無盡的自責',
           action: 'ending_drown'
         });
       }
-
-      list.push({
-        id: 'back_bath_door',
-        label: '退回浴室門口',
-        action: 'bathroom_door'
-      });
-
+      list.push({ id: 'back_bath_door', label: '退回浴室門口', action: 'bathroom_door' });
       return list;
     }
   },
@@ -523,9 +412,7 @@ const Scenes = {
       GameState.flags.drainedTub = true;
       increaseTruth(20);
     },
-    choices: () => [
-      { id: 'stay_tub', label: '凝視排水後的浴缸底部', action: 'bathtub_area' }
-    ]
+    choices: () => [{ id: 'stay_tub', label: '凝視排水後的浴缸底部', action: 'bathtub_area' }]
   },
 
   examine_photo: {
@@ -539,9 +426,7 @@ const Scenes = {
       GameState.inventory.photo = ItemData.photo;
       increaseTruth(10);
     },
-    choices: () => [
-      { id: 'stay_tub', label: '深吸一口氣，做出你最後的決定', action: 'bathtub_area' }
-    ]
+    choices: () => [{ id: 'stay_tub', label: '深吸一口氣，做出你最後的決定', action: 'bathtub_area' }]
   }
 };
 
@@ -598,30 +483,31 @@ const Endings = {
 };
 
 /* =====================================================================
-   5. 流程控制、打字機與事件監聽
+   5. 流程控制、打字機與事件監聽（雙向相容與全域防呆）
    ===================================================================== */
 let typewriterTimer = null;
 let isTypewriting = false;
 let currentFullText = '';
 
+// 雙向相容選擇器：不管是新版還是舊版 ID 都能抓到，絕不為 null
 const elTitleScreen = document.getElementById('title-screen');
-const elPlayArea = document.getElementById('play-area');
+const elPlayArea = document.getElementById('play-area') || document.getElementById('game-screen');
 const elStartBtn = document.getElementById('start-game-btn');
 const elHudTitle = document.getElementById('hud-title');
-const elHudLoop = document.getElementById('hud-loop');
+const elHudLoop = document.getElementById('hud-loop') || document.getElementById('hud-deaths');
 const elAudioBtn = document.getElementById('audio-toggle-btn');
 const elRestartBtn = document.getElementById('restart-btn');
 const elSceneLoc = document.getElementById('scene-location');
 const elSceneTime = document.getElementById('scene-time');
-const elDialogBox = document.getElementById('dialog-box');
-const elTypeText = document.getElementById('typewriter-text');
-const elCursor = document.getElementById('terminal-cursor');
-const elChoices = document.getElementById('choices-container');
+const elDialogBox = document.getElementById('dialog-box') || document.getElementById('text-viewport');
+const elTypeText = document.getElementById('typewriter-text') || document.getElementById('typewriter-output');
+const elCursor = document.getElementById('terminal-cursor') || document.getElementById('cursor');
+const elChoices = document.getElementById('choices-container') || document.getElementById('choices-wrapper');
 const elTraumaBox = document.getElementById('trauma-box');
 const elItemsList = document.getElementById('items-list');
 
-const elDeathOverlay = document.getElementById('death-overlay');
-const elDeathReason = document.getElementById('death-reason');
+const elDeathOverlay = document.getElementById('death-overlay') || document.getElementById('death-screen');
+const elDeathReason = document.getElementById('death-reason') || document.getElementById('death-desc');
 const elDeathFlash = document.getElementById('death-flash');
 const elEndingOverlay = document.getElementById('ending-overlay');
 const elEndingTag = document.getElementById('ending-tag');
@@ -637,49 +523,67 @@ const elConfirmModal = document.getElementById('confirm-modal');
 const elConfirmCancel = document.getElementById('confirm-cancel-btn');
 const elConfirmOk = document.getElementById('confirm-ok-btn');
 
-elStartBtn.addEventListener('click', () => {
-  SoundManager.init();
-  SoundManager.playGameStart(); // <--- 加在這一行！
-  
-  GameState.started = true;
-  elTitleScreen.style.display = 'none';
-  elPlayArea.style.display = 'flex';
-  renderScene('bedroom_wake');
-});
+// 初始化事件監聽（帶有元素存在判定，杜絕報錯）
+if (elStartBtn) {
+  elStartBtn.addEventListener('click', () => {
+    SoundManager.init();
+    SoundManager.playGameStart();
+    
+    GameState.started = true;
+    if (elTitleScreen) elTitleScreen.style.display = 'none';
+    if (elPlayArea) {
+      elPlayArea.style.display = 'flex';
+      elPlayArea.classList.add('active');
+    }
+    renderScene('bedroom_wake');
+  });
+}
 
-elAudioBtn.addEventListener('click', () => {
-  SoundManager.init();
-  const state = SoundManager.toggle();
-  elAudioBtn.textContent = state ? '[ 聲音: 開 ]' : '[ 聲音: 關 ]';
-});
+if (elAudioBtn) {
+  elAudioBtn.addEventListener('click', () => {
+    SoundManager.init();
+    const state = SoundManager.toggle();
+    elAudioBtn.textContent = state ? '[ 聲音: 開 ]' : '[ 聲音: 關 ]';
+  });
+}
 
-elRestartBtn.addEventListener('click', () => {
-  SoundManager.playTypeTick();
-  elConfirmModal.style.display = 'flex';
-});
+if (elRestartBtn) {
+  elRestartBtn.addEventListener('click', () => {
+    SoundManager.playTypeTick();
+    if (elConfirmModal) elConfirmModal.style.display = 'flex';
+  });
+}
 
-elConfirmCancel.addEventListener('click', () => {
-  SoundManager.playTypeTick();
-  elConfirmModal.style.display = 'none';
-});
+if (elConfirmCancel) {
+  elConfirmCancel.addEventListener('click', () => {
+    SoundManager.playTypeTick();
+    if (elConfirmModal) elConfirmModal.style.display = 'none';
+  });
+}
 
-elConfirmOk.addEventListener('click', () => {
-  SoundManager.playTypeTick();
-  elConfirmModal.style.display = 'none';
-  fullReset();
-});
+if (elConfirmOk) {
+  elConfirmOk.addEventListener('click', () => {
+    SoundManager.playTypeTick();
+    if (elConfirmModal) elConfirmModal.style.display = 'none';
+    fullReset();
+  });
+}
 
-elDialogBox.addEventListener('click', skipTypewriter);
-elDeathOverlay.addEventListener('click', awakenFromDeath);
+if (elDialogBox) elDialogBox.addEventListener('click', skipTypewriter);
+if (elDeathOverlay) elDeathOverlay.addEventListener('click', awakenFromDeath);
 
-elEndingRestart.addEventListener('click', () => {
-  elEndingOverlay.style.display = 'none';
-  fullReset();
-});
+if (elEndingRestart) {
+  elEndingRestart.addEventListener('click', () => {
+    if (elEndingOverlay) elEndingOverlay.style.display = 'none';
+    fullReset();
+  });
+}
 
-elModalClose.addEventListener('click', () => {
-  elItemModal.style.display = 'none';
-});
+if (elModalClose) {
+  elModalClose.addEventListener('click', () => {
+    if (elItemModal) elItemModal.style.display = 'none';
+  });
+}
 
 function increaseTruth(delta) {
   GameState.truth = Math.min(100, GameState.truth + delta);
@@ -694,12 +598,16 @@ function triggerTruthMutation() {
   SoundManager.playHeartbeat();
   
   document.body.classList.add('truth-high');
-  elHudTitle.textContent = '浴䶮';
-  elHudTitle.classList.add('mutated');
+  document.body.classList.add('corrupted');
+  if (elHudTitle) {
+    elHudTitle.textContent = '浴䶮';
+    elHudTitle.classList.add('mutated');
+    elHudTitle.classList.add('corrupted');
 
-  setTimeout(() => {
-    elHudTitle.textContent = '浴逝';
-  }, 400);
+    setTimeout(() => {
+      elHudTitle.textContent = '浴逝';
+    }, 400);
+  }
 }
 
 function renderScene(sceneId) {
@@ -707,9 +615,9 @@ function renderScene(sceneId) {
   if (!scene) return;
 
   GameState.currentSceneId = sceneId;
-  elSceneLoc.textContent = scene.location;
-  elSceneTime.textContent = scene.time;
-  elTraumaBox.style.display = 'none';
+  if (elSceneLoc) elSceneLoc.textContent = scene.location;
+  if (elSceneTime) elSceneTime.textContent = scene.time;
+  if (elTraumaBox) elTraumaBox.style.display = 'none';
 
   if (scene.onEnter) {
     scene.onEnter();
@@ -728,35 +636,34 @@ function startTypewriter(text, onComplete) {
   if (typewriterTimer) clearInterval(typewriterTimer);
   isTypewriting = true;
   currentFullText = text;
-  elTypeText.textContent = '';
-  elChoices.innerHTML = '';
-  elCursor.style.display = 'inline-block';
+  if (elTypeText) elTypeText.textContent = '';
+  if (elChoices) elChoices.innerHTML = '';
+  if (elCursor) elCursor.style.display = 'inline-block';
 
   let i = 0;
-  const speed = 24;
+  const speed = 22;
 
   typewriterTimer = setInterval(() => {
     if (i < text.length) {
-      elTypeText.textContent += text.charAt(i);
+      if (elTypeText) elTypeText.textContent += text.charAt(i);
 
-// ▼▼▼ 加上 try-catch 保護，就算沒音檔也不會卡死打字機 ▼▼▼
-          try {
-            if (i % 3 === 0 && text.charAt(i).trim()) {
-              SoundManager.playTypeTick();
-            }
-          } catch (err) {}
-
-          i++; // <--- 確保這行一定會執行！
-        } else {
-          finishTypewriter(onComplete);
+      try {
+        if (i % 3 === 0 && text.charAt(i).trim()) {
+          SoundManager.playTypeTick();
         }
-      }, speed);
+      } catch (err) {}
+
+      i++;
+    } else {
+      finishTypewriter(onComplete);
+    }
+  }, speed);
 }
 
 function skipTypewriter() {
   if (!isTypewriting) return;
   if (typewriterTimer) clearInterval(typewriterTimer);
-  elTypeText.textContent = currentFullText;
+  if (elTypeText) elTypeText.textContent = currentFullText;
   finishTypewriter(() => {
     const scene = Scenes[GameState.currentSceneId];
     renderChoices(scene);
@@ -766,23 +673,25 @@ function skipTypewriter() {
 function finishTypewriter(callback) {
   if (typewriterTimer) clearInterval(typewriterTimer);
   isTypewriting = false;
-  elCursor.style.display = 'inline-block';
+  if (elCursor) elCursor.style.display = 'inline-block';
   if (callback) callback();
 }
 
 function renderChoices(scene) {
+  if (!elChoices) return;
   elChoices.innerHTML = '';
   const choices = typeof scene.choices === 'function' ? scene.choices() : scene.choices;
   if (!choices || choices.length === 0) return;
 
   choices.forEach((choice, idx) => {
     const btn = document.createElement('button');
-    btn.className = 'choice-btn';
+    btn.className = 'choice-btn pixel-choice-btn';
 
     const isTrauma = GameState.traumaSet.has(choice.id);
 
     if (isTrauma) {
       btn.classList.add('trauma-struck');
+      btn.classList.add('traumatized');
       btn.innerHTML = `
         <span class="choice-prefix">[!]</span>
         <span class="choice-label">${choice.label}</span>
@@ -831,9 +740,13 @@ function handleChoiceClick(choice) {
 
 function triggerTraumaRecoil(text) {
   SoundManager.playHeartbeat();
-  elTraumaBox.textContent = text;
-  elTraumaBox.style.display = 'block';
-  elTraumaBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (elTraumaBox) {
+    elTraumaBox.textContent = text;
+    elTraumaBox.style.display = 'block';
+    elTraumaBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else if (elTypeText) {
+    elTypeText.innerHTML += `\n\n<span style="color: #c92a2a;">${text}</span>`;
+  }
 }
 
 function triggerDeath(choiceId, deathKey) {
@@ -848,20 +761,30 @@ function triggerDeath(choiceId, deathKey) {
     desc: '意識被深冷的水流無情吞噬。'
   };
 
-  elDeathReason.textContent = deathInfo.desc;
+  if (elDeathReason) elDeathReason.textContent = deathInfo.desc;
 
-  elDeathFlash.style.opacity = '1';
-  elDeathOverlay.style.display = 'flex';
+  if (elDeathFlash) {
+    elDeathFlash.style.opacity = '1';
+    setTimeout(() => {
+      elDeathFlash.style.transition = 'opacity 0.6s ease';
+      elDeathFlash.style.opacity = '0';
+    }, 100);
+  }
 
-  setTimeout(() => {
-    elDeathFlash.style.transition = 'opacity 0.6s ease';
-    elDeathFlash.style.opacity = '0';
-  }, 100);
+  if (elDeathOverlay) {
+    elDeathOverlay.style.display = 'flex';
+    elDeathOverlay.classList.remove('hidden');
+    elDeathOverlay.classList.add('active');
+  }
 }
 
 function awakenFromDeath() {
   GameState.isDead = false;
-  elDeathOverlay.style.display = 'none';
+  if (elDeathOverlay) {
+    elDeathOverlay.style.display = 'none';
+    elDeathOverlay.classList.add('hidden');
+    elDeathOverlay.classList.remove('active');
+  }
 
   SoundManager.playAwakenChime();
   SoundManager.playHeartbeat();
@@ -871,11 +794,15 @@ function awakenFromDeath() {
 }
 
 function updateHud() {
-  if (GameState.deaths > 0) {
-    elHudLoop.classList.add('visible');
-    elHudLoop.textContent = `輪迴 / 死亡次數：${GameState.deaths}`;
-  } else {
-    elHudLoop.classList.remove('visible');
+  if (elHudLoop) {
+    if (GameState.deaths > 0) {
+      elHudLoop.classList.add('visible');
+      elHudLoop.classList.remove('hidden');
+      elHudLoop.textContent = `輪迴 / 死亡次數：${GameState.deaths}`;
+    } else {
+      elHudLoop.classList.remove('visible');
+      elHudLoop.classList.add('hidden');
+    }
   }
 
   if (GameState.truth >= 70 && !GameState.mutated) {
@@ -884,10 +811,11 @@ function updateHud() {
 }
 
 function updateInventoryBar() {
+  if (!elItemsList) return;
   const keys = Object.keys(GameState.inventory);
   elItemsList.innerHTML = '';
   if (keys.length === 0) {
-    elItemsList.innerHTML = '<span style="color:#444; font-size:0.8rem;">(尚無)</span>';
+    elItemsList.innerHTML = '<span style="color:#555; font-size:0.85rem;">[ 隨身物品：空 ]</span>';
     return;
   }
   keys.forEach(k => {
@@ -905,29 +833,31 @@ function updateInventoryBar() {
 
 function showItemModal(item) {
   SoundManager.playTypeTick();
-  elModalTitle.textContent = item.name;
-  elModalDesc.textContent = item.desc;
-  elItemModal.style.display = 'flex';
+  if (elModalTitle) elModalTitle.textContent = item.name;
+  if (elModalDesc) elModalDesc.textContent = item.desc;
+  if (elItemModal) elItemModal.style.display = 'flex';
 }
 
 function showEnding(type) {
   GameState.isEnding = true;
   const end = Endings[type];
-  elEndingTag.textContent = end.tag;
-  elEndingTitle.textContent = end.title;
-  elEndingDesc.textContent = end.desc;
+  if (elEndingTag) elEndingTag.textContent = end.tag;
+  if (elEndingTitle) elEndingTitle.textContent = end.title;
+  if (elEndingDesc) elEndingDesc.textContent = end.desc;
 
-  if (type === 'true') {
-    elEndingTitle.style.color = '#77ffaa';
-    elEndingRestart.textContent = '[ 迎向新生的晨曦 ]';
-    SoundManager.playAwakenChime();
-  } else {
-    elEndingTitle.style.color = '#ff4455';
-    elEndingRestart.textContent = '[ 再次墜入輪迴 ]';
-    SoundManager.playDeathSound();
+  if (elEndingTitle) {
+    if (type === 'true') {
+      elEndingTitle.style.color = '#77ffaa';
+      if (elEndingRestart) elEndingRestart.textContent = '[ 迎向新生的晨曦 ]';
+      SoundManager.playAwakenChime();
+    } else {
+      elEndingTitle.style.color = '#ff4455';
+      if (elEndingRestart) elEndingRestart.textContent = '[ 再次墜入輪迴 ]';
+      SoundManager.playDeathSound();
+    }
   }
 
-  elEndingOverlay.style.display = 'flex';
+  if (elEndingOverlay) elEndingOverlay.style.display = 'flex';
 }
 
 function fullReset() {
@@ -955,10 +885,17 @@ function fullReset() {
   };
 
   document.body.classList.remove('truth-high');
-  elHudTitle.textContent = '浴室';
-  elHudTitle.classList.remove('mutated');
-  elHudLoop.classList.remove('visible');
+  document.body.classList.remove('corrupted');
+  if (elHudTitle) {
+    elHudTitle.textContent = '浴室';
+    elHudTitle.classList.remove('mutated');
+    elHudTitle.classList.remove('corrupted');
+  }
+  if (elHudLoop) {
+    elHudLoop.classList.remove('visible');
+    elHudLoop.classList.add('hidden');
+  }
 
-  elPlayArea.style.display = 'none';
-  elTitleScreen.style.display = 'flex';
+  if (elPlayArea) elPlayArea.style.display = 'none';
+  if (elTitleScreen) elTitleScreen.style.display = 'flex';
 }
