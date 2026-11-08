@@ -1,5 +1,5 @@
 /* =====================================================================
-   1. 音效管理器（支援自訂音檔）
+   1. 音效管理器（支援自訂音檔，缺少的音效先留空不報錯）
    ===================================================================== */
 const SoundManager = {
   enabled: true,
@@ -11,7 +11,6 @@ const SoundManager = {
   },
 
   init() {
-    // 預先設定音量（0.0 ~ 1.0）
     if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 0.2;
     if (this.audioFiles.type) this.audioFiles.type.volume = 0.2;
   },
@@ -21,34 +20,25 @@ const SoundManager = {
     return this.enabled;
   },
 
-  // 共用播放函式：歸零後重播，支援快速連續觸發
   play(name) {
     if (!this.enabled) return;
     const sound = this.audioFiles[name];
     if (sound) {
       sound.currentTime = 0; // 重置進度條，連續點擊也能發聲
-      sound.play().catch(() => {}); // 避免瀏覽器未互動時報錯
+      sound.play().catch(() => {}); // 避免未互動時報錯
     }
   },
 
-  // 2. 對應現有程式碼呼叫的同名函式
+  // 現有對應的音效
   playGameStart()   { this.play('alarm'); },
-  playTypeTick()   { this.play('type'); },
+  playTypeTick()    { this.play('type'); },
 
-},
-
-   const SoundManager = {
-  audioFiles: {
-    // ... 原本的音效 ...
-    start: new Audio('sounds/alarm.mp3'), // 1. 加入開始音效檔
-  },
-
-  // 2. 新增播放函式
-  playGameStart() {
-    this.play('slarm');
-  },
-  
-  // ...
+  // 其他暫時沒有音檔的函式留空，避免遊戲執行時報錯當掉
+  playWaterDrip()   {},
+  playDeathSound()  {},
+  playHeartbeat()   {},
+  playAwakenChime() {},
+  playGlitchBurst() {}
 };
 /* =====================================================================
    2. 遊戲狀態與物品定義
@@ -653,7 +643,7 @@ elStartBtn.addEventListener('click', () => {
   GameState.started = true;
   elTitleScreen.style.display = 'none';
   elPlayArea.style.display = 'flex';
-  renderScene('alarm');
+  renderScene('bedroom_wake');
 });
 
 elAudioBtn.addEventListener('click', () => {
