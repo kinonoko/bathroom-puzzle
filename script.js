@@ -1,142 +1,19 @@
 /* =====================================================================
-   1. Web Audio API 音效合成器
+   1. 音效管理器（支援自訂音檔）
    ===================================================================== */
 const SoundManager = {
-  ctx: null,
   enabled: true,
 
+  // 1. 預載你的音效檔案
+  audioFiles: {
+    alarm: new Audio('sounds/alarm.mp3'),
+  },
+
   init() {
-    if (!this.ctx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.ctx = new AudioContext();
-      }
-    }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+    // 預先設定音量（0.0 ~ 1.0）
+    if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 0.2;
   },
 
-  toggle() {
-    this.enabled = !this.enabled;
-    return this.enabled;
-  },
-
-  playTypeTick() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140 + Math.random() * 40, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.012, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.04);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.04);
-    } catch (e) {}
-  },
-
-  playWaterDrip() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      const t = this.ctx.currentTime;
-      osc.frequency.setValueAtTime(950 + Math.random() * 80, t);
-      osc.frequency.exponentialRampToValueAtTime(320, t + 0.12);
-      gain.gain.setValueAtTime(0.04, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.12);
-    } catch (e) {}
-  },
-
-  playDeathSound() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sawtooth';
-      const t = this.ctx.currentTime;
-      osc.frequency.setValueAtTime(120, t);
-      osc.frequency.exponentialRampToValueAtTime(25, t + 0.9);
-      gain.gain.setValueAtTime(0.25, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.9);
-    } catch (e) {}
-  },
-
-  playHeartbeat() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      const t = this.ctx.currentTime;
-      osc.frequency.setValueAtTime(65, t);
-      osc.frequency.exponentialRampToValueAtTime(35, t + 0.18);
-      gain.gain.setValueAtTime(0.18, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.18);
-    } catch (e) {}
-  },
-
-  playAwakenChime() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      const t = this.ctx.currentTime;
-      osc.frequency.setValueAtTime(260, t);
-      osc.frequency.exponentialRampToValueAtTime(520, t + 0.4);
-      gain.gain.setValueAtTime(0.08, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.7);
-    } catch (e) {}
-  },
-
-  playGlitchBurst() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'square';
-      const t = this.ctx.currentTime;
-      osc.frequency.setValueAtTime(80, t);
-      osc.frequency.setValueAtTime(440, t + 0.05);
-      osc.frequency.setValueAtTime(110, t + 0.12);
-      gain.gain.setValueAtTime(0.15, t);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.35);
-    } catch (e) {}
-  }
-};
-
-setInterval(() => {
-  if (GameState.started && !GameState.isDead && !GameState.isEnding) {
-    if (Math.random() < 0.35) {
-      SoundManager.playWaterDrip();
-    }
-  }
-}, 4500);
 
 /* =====================================================================
    2. 遊戲狀態與物品定義
