@@ -18,12 +18,16 @@ const SoundManager = {
     return this.enabled;
   },
 
-  play(name) {
-    if (!this.enabled) return;
-    const sound = this.audioFiles[name];
-    if (sound) {
-      sound.currentTime = 0; // 重置進度條，連續點擊也能發聲
-      sound.play().catch(() => {}); // 避免未互動時報錯
+play(name) {
+    if (!this.enabled || !this.audioFiles) return;
+    try {
+      const sound = this.audioFiles[name];
+      if (sound) {
+        sound.currentTime = 0; // 若檔案不存在，這裡容易報錯
+        sound.play().catch(() => {});
+      }
+    } catch (err) {
+      // 避免因找不到音檔或載入失敗讓整個遊戲卡死
     }
   },
 
@@ -734,14 +738,19 @@ function startTypewriter(text, onComplete) {
   typewriterTimer = setInterval(() => {
     if (i < text.length) {
       elTypeText.textContent += text.charAt(i);
-      if (i % 3 === 0 && text.charAt(i).trim()) {
-        SoundManager.playTypeTick();
-      }
-      i++;
-    } else {
-      finishTypewriter(onComplete);
-    }
-  }, speed);
+
+// ▼▼▼ 加上 try-catch 保護，就算沒音檔也不會卡死打字機 ▼▼▼
+          try {
+            if (i % 3 === 0 && text.charAt(i).trim()) {
+              SoundManager.playTypeTick();
+            }
+          } catch (err) {}
+
+          i++; // <--- 確保這行一定會執行！
+        } else {
+          finishTypewriter(onComplete);
+        }
+      }, speed);
 }
 
 function skipTypewriter() {
