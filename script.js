@@ -32,7 +32,7 @@ play(name) {
   },
 
   // 現有對應的音效
-  playGameStart()   { this.play('alarm.mp3'); },
+  playGameStart()   { this.play('alarm'); },
 
   // 其他暫時沒有音檔的函式留空，避免遊戲執行時報錯當掉
   playWaterDrip()   {},
