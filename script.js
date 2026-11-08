@@ -8,18 +8,12 @@ const SoundManager = {
   audioFiles: {
     alarm: new Audio('sounds/alarm.mp3'),
     type: new Audio('sounds/type.mp3'),
-    drip: new Audio('sounds/drip.mp3'),
-    death: new Audio('sounds/death.mp3'),
-    heartbeat: new Audio('sounds/heartbeat.mp3'),
-    awaken: new Audio('sounds/awaken.mp3'),
-    glitch: new Audio('sounds/glitch.mp3'),
   },
 
   init() {
     // 預先設定音量（0.0 ~ 1.0）
     if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 0.2;
     if (this.audioFiles.type) this.audioFiles.type.volume = 0.2;
-    if (this.audioFiles.drip) this.audioFiles.drip.volume = 0.4;
   },
 
   toggle() {
@@ -38,12 +32,9 @@ const SoundManager = {
   },
 
   // 2. 對應現有程式碼呼叫的同名函式
+  playGameStart()   { this.play('alarm'); },
   playTypeTick()   { this.play('type'); },
-  playWaterDrip()  { this.play('drip'); },
-  playDeathSound() { this.play('death'); },
-  playHeartbeat()  { this.play('heartbeat'); },
-  playAwakenChime(){ this.play('awaken'); },
-  playGlitchBurst(){ this.play('glitch'); }
+
 },
 
    const SoundManager = {
@@ -662,7 +653,7 @@ elStartBtn.addEventListener('click', () => {
   GameState.started = true;
   elTitleScreen.style.display = 'none';
   elPlayArea.style.display = 'flex';
-  renderScene('bedroom_wake');
+  renderScene('alarm');
 });
 
 elAudioBtn.addEventListener('click', () => {
