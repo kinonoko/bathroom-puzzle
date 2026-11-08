@@ -7,14 +7,58 @@ const SoundManager = {
   // 1. 預載你的音效檔案
   audioFiles: {
     alarm: new Audio('sounds/alarm.mp3'),
+    type: new Audio('sounds/type.mp3'),
+    drip: new Audio('sounds/drip.mp3'),
+    death: new Audio('sounds/death.mp3'),
+    heartbeat: new Audio('sounds/heartbeat.mp3'),
+    awaken: new Audio('sounds/awaken.mp3'),
+    glitch: new Audio('sounds/glitch.mp3'),
   },
 
   init() {
     // 預先設定音量（0.0 ~ 1.0）
     if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 0.2;
+    if (this.audioFiles.type) this.audioFiles.type.volume = 0.2;
+    if (this.audioFiles.drip) this.audioFiles.drip.volume = 0.4;
   },
 
+  toggle() {
+    this.enabled = !this.enabled;
+    return this.enabled;
+  },
 
+  // 共用播放函式：歸零後重播，支援快速連續觸發
+  play(name) {
+    if (!this.enabled) return;
+    const sound = this.audioFiles[name];
+    if (sound) {
+      sound.currentTime = 0; // 重置進度條，連續點擊也能發聲
+      sound.play().catch(() => {}); // 避免瀏覽器未互動時報錯
+    }
+  },
+
+  // 2. 對應現有程式碼呼叫的同名函式
+  playTypeTick()   { this.play('type'); },
+  playWaterDrip()  { this.play('drip'); },
+  playDeathSound() { this.play('death'); },
+  playHeartbeat()  { this.play('heartbeat'); },
+  playAwakenChime(){ this.play('awaken'); },
+  playGlitchBurst(){ this.play('glitch'); }
+},
+
+   const SoundManager = {
+  audioFiles: {
+    // ... 原本的音效 ...
+    start: new Audio('sounds/alarm.mp3'), // 1. 加入開始音效檔
+  },
+
+  // 2. 新增播放函式
+  playGameStart() {
+    this.play('slarm');
+  },
+  
+  // ...
+};
 /* =====================================================================
    2. 遊戲狀態與物品定義
    ===================================================================== */
@@ -613,6 +657,8 @@ const elConfirmOk = document.getElementById('confirm-ok-btn');
 
 elStartBtn.addEventListener('click', () => {
   SoundManager.init();
+  SoundManager.playGameStart(); // <--- 加在這一行！
+  
   GameState.started = true;
   elTitleScreen.style.display = 'none';
   elPlayArea.style.display = 'flex';
