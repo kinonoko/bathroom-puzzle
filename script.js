@@ -10,7 +10,7 @@ const SoundManager = {
   },
 
   init() {
-    if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 0.2;
+    if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 1.0;
   },
 
   toggle() {
