@@ -10,7 +10,7 @@ const SoundManager = {
   },
 
   init() {
-    if (this.audioFiles.alarm) this.audioFiles.alarm.volume = 1.0;
+    if (this.audioFiles.alarm) this.audioFiles.alarm.mp3.volume = 1.0;
   },
 
   toggle() {
@@ -32,7 +32,7 @@ play(name) {
   },
 
   // 現有對應的音效
-  playGameStart()   { this.play('alarm'); },
+  playGameStart()   { this.play('alarm.mp3'); },
 
   // 其他暫時沒有音檔的函式留空，避免遊戲執行時報錯當掉
   playWaterDrip()   {},
