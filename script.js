@@ -5,6 +5,7 @@ const SoundManager = {
   enabled: true,
 
   audioFiles: {
+    type: new Audio('sound/type.mp3'),
     alarm: new Audio('sound/alarm.mp3'),
     death: new Audio('sound/death.mp3'),
   },
@@ -12,6 +13,7 @@ const SoundManager = {
   init() {
     if (this.audioFile.alarm) this.audioFiles.alarm.volume = 1.0;
     if (this.audioFile.death) this.audioFiles.death.volume = 0.6;
+    if (this.audioFile.type) this.audioFiles.type.volume = 1.0;
     }
   },
 
